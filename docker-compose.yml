@@ -1,0 +1,105 @@
+networks:
+  backend:
+  frontend:
+
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    networks:
+      - backend
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
+
+  vigodb:
+    container_name: VigoDB
+    image: mysql:8.0.35
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+    ports:
+      - 8002:3306
+    restart: always
+    networks:
+      - backend
+
+  vigo:
+    container_name: vigo-api
+    image: ${DOCKER_REGISTRY-}vigo-api
+    volumes:
+      - vigo_volume:/app/volume/image
+    build:
+      context: .
+      dockerfile: vigo/Dockerfile
+    networks:
+      - backend
+    ports:
+      - 2002:80
+    restart: always
+    environment:
+      - DB_HOST=VigoDB
+      - DB_PORT=3306
+      - DB_NAME=vigodb
+      - DB_USER=root
+      - DB_PASSWORD=123456
+      - ASPNETCORE_URLS=http://+:80
+
+  vigo.admin:
+    container_name: vigo-admin-api
+    image: ${DOCKER_REGISTRY-}vigo-admin-api
+    volumes:
+      - vigo_volume:/app/volume/image
+    build:
+      context: .
+      dockerfile: vigo.Admin/Dockerfile
+    networks:
+      - backend
+    ports:
+      - 2003:80
+    restart: always
+    environment:
+      - DB_HOST=VigoDB
+      - DB_PORT=3306
+      - DB_NAME=vigo
+      - DB_USER=root
+      - DB_PASSWORD=123456
+      - ASPNETCORE_URLS=http://+:80
+  spring-app:
+    build:
+      context: ./Pro4EmailSend
+      dockerfile: Dockerfile
+    container_name: spring-app
+    networks:
+      - backend
+    depends_on:
+      - rabbitmq
+    environment:
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: admin
+      SPRING_RABBITMQ_PASSWORD: admin
+    ports:
+      - "2004:8080"
+  be-nodejs:
+    build:
+      context: ./BE
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      - DEV_DB_HOST=VigoDB
+      - DEV_DB_PORT=3306
+      - DEV_DB_NAME=vigodb
+      - URL_FE_CORS=*
+      - DEV_DB_USERNAME=root
+      - DEV_DB_PWD=123456
+    networks:
+      - backend
+    ports:
+         - 2005:8000
+volumes:
+  vigo_volume:
+    driver: local
+    name: vigo_pro4_volume
