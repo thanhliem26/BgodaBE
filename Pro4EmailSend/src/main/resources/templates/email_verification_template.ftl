@@ -51,10 +51,10 @@
 
     <p>Vui lòng nhấp vào nút dưới đây để xác minh địa chỉ email của bạn:</p>
 
-    <form id="verificationForm" action="${url}" method="POST">
+   
         <input type="hidden" name="email" value="${email}">
-        <button type="submit" class="button">Xác minh email</button>
-    </form>
+        <a href="${url}" type="submit" class="button">Xác minh email</a>
+   
 
     <p>Nếu bạn không yêu cầu đăng ký tài khoản này, vui lòng bỏ qua email này.</p>
 

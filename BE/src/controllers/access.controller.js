@@ -9,6 +9,13 @@ class AccessController {
             metadata: await AccessService.uploadFileServiceS3(req.file, req.body),
         }).send(res)
     }
+
+    ActiveEmail = async (req, res, next) => {
+        new CREATED({
+            message: 'active email success!',
+            metadata: await AccessService.activeEmail(req.body),
+        }).send(res)
+    }
 }
 
 module.exports = new AccessController
